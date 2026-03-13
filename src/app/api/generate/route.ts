@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { prompt, styleId, backgroundId, size, count, userImage } = body;
+    const { prompt, styleId, backgroundId, size, quality, count, userImage } = body;
 
     if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
@@ -35,12 +35,13 @@ export async function POST(req: NextRequest) {
 
     // Validate user image if provided
     let userImageBase64: string | undefined;
+    let userImageMediaType: string | undefined;
     if (userImage) {
-      // Extract base64 data from data URL
       const matches = userImage.match(/^data:(image\/\w+);base64,(.+)$/);
       if (!matches || !ALLOWED_TYPES.includes(matches[1])) {
         return NextResponse.json({ error: "Invalid image format. Use PNG, JPEG, or WebP." }, { status: 400 });
       }
+      userImageMediaType = matches[1] as string;
       userImageBase64 = matches[2] as string;
       const imageSize = Buffer.from(userImageBase64, "base64").length;
       if (imageSize > MAX_IMAGE_SIZE) {
@@ -53,8 +54,10 @@ export async function POST(req: NextRequest) {
       stylePrompt: style.prompt,
       backgroundPrompt: background?.prompt,
       size: size || "1024x1024",
+      quality: quality || "high",
       count: imageCount,
       userImageBase64,
+      userImageMediaType,
     });
 
     return NextResponse.json({

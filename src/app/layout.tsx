@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AvatarAI - AI Avatar Generator",
   description:
-    "Create stunning AI-generated avatars in seconds. Choose from 8 unique styles including realistic, anime, cyberpunk, and more. Powered by OpenAI gpt-image-1.",
-  keywords: ["AI avatar", "avatar generator", "AI art", "OpenAI", "gpt-image-1", "profile picture"],
+    "Create stunning AI-generated avatars in seconds. Choose from 8 unique styles including realistic, anime, cyberpunk, and more. Powered by OpenAI GPT-4.1.",
+  keywords: ["AI avatar", "avatar generator", "AI art", "OpenAI", "GPT-4.1", "profile picture"],
   openGraph: {
     title: "AvatarAI - AI Avatar Generator",
     description: "Create stunning AI-generated avatars in seconds with 8 unique styles.",

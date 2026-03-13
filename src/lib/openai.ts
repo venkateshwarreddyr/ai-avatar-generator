@@ -4,60 +4,92 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Use a mainline model with the image_generation tool (Responses API)
+const MODEL = "gpt-4.1";
+
 export interface GenerateAvatarParams {
   prompt: string;
   stylePrompt: string;
   backgroundPrompt?: string;
   size?: "1024x1024" | "1024x1536" | "1536x1024";
+  quality?: "low" | "medium" | "high" | "auto";
   count?: number;
   userImageBase64?: string;
+  userImageMediaType?: string;
 }
 
 export async function generateAvatar(params: GenerateAvatarParams): Promise<string[]> {
-  const { prompt, stylePrompt, backgroundPrompt, size = "1024x1024", count = 1, userImageBase64 } = params;
+  const {
+    prompt,
+    stylePrompt,
+    backgroundPrompt,
+    size = "1024x1024",
+    quality = "high",
+    count = 1,
+    userImageBase64,
+    userImageMediaType = "image/png",
+  } = params;
 
   const fullPrompt = buildPrompt(prompt, stylePrompt, backgroundPrompt);
-  const images: string[] = [];
 
   const generateOne = async (): Promise<string> => {
+    // Build input content
+    const content: OpenAI.Responses.ResponseInputContent[] = [];
+
+    // If user uploaded an image, include it as input for editing
     if (userImageBase64) {
-      // Photo-to-avatar: use edit endpoint with user's image as input
-      const imageBuffer = Buffer.from(userImageBase64, "base64");
-      const imageFile = new File([imageBuffer], "input.png", { type: "image/png" });
-
-      const result = await openai.images.edit({
-        model: "gpt-image-1",
-        image: imageFile,
-        prompt: `Transform this photo into an avatar: ${fullPrompt}`,
-        size: size,
+      content.push({
+        type: "input_image",
+        image_url: `data:${userImageMediaType};base64,${userImageBase64}`,
+        detail: "high",
       });
-
-      return result.data?.[0]?.b64_json ?? "";
+      content.push({
+        type: "input_text",
+        text: `Transform this photo into a stylized avatar. ${fullPrompt}`,
+      });
     } else {
-      // Text-to-avatar: use generate endpoint
-      const result = await openai.images.generate({
-        model: "gpt-image-1",
-        prompt: fullPrompt,
-        size: size,
-        n: 1,
+      content.push({
+        type: "input_text",
+        text: `Draw ${fullPrompt}`,
       });
-
-      return result.data?.[0]?.b64_json ?? "";
     }
+
+    const response = await openai.responses.create({
+      model: MODEL,
+      input: [{ role: "user", content }],
+      tools: [
+        {
+          type: "image_generation",
+          size,
+          quality,
+        },
+      ],
+      tool_choice: { type: "image_generation" },
+    });
+
+    // Extract the generated image from the response
+    const imageOutput = response.output.find(
+      (output) => output.type === "image_generation_call"
+    );
+
+    if (imageOutput && imageOutput.type === "image_generation_call" && imageOutput.result) {
+      return imageOutput.result;
+    }
+
+    return "";
   };
 
   // Generate images concurrently (max 4)
   const batchSize = Math.min(count, 4);
   const promises = Array.from({ length: batchSize }, () => generateOne());
   const results = await Promise.all(promises);
-  images.push(...results.filter(Boolean));
 
-  return images;
+  return results.filter(Boolean);
 }
 
 function buildPrompt(userPrompt: string, stylePrompt: string, backgroundPrompt?: string): string {
   const parts = [
-    `Create a stunning avatar portrait: ${userPrompt}`,
+    `a stunning avatar portrait: ${userPrompt}`,
     `Art style: ${stylePrompt}`,
     backgroundPrompt ? `Background: ${backgroundPrompt}` : null,
     "The avatar should be centered, well-composed, high quality, and visually striking.",

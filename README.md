@@ -7,7 +7,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-gpt--image--1-412991?style=for-the-badge&logo=openai)](https://platform.openai.com/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4.1-412991?style=for-the-badge&logo=openai)](https://platform.openai.com/)
 
 <br />
 
@@ -24,7 +24,7 @@
 
 ## About
 
-AvatarAI is a web app that generates beautiful AI avatars from text prompts or uploaded photos. Powered by OpenAI's **gpt-image-1** model, it supports 8 distinct art styles, 6 background options, and batch generation — all wrapped in a sleek dark-themed UI.
+AvatarAI is a web app that generates beautiful AI avatars from text prompts or uploaded photos. Powered by OpenAI's **GPT-4.1** with the **Responses API image_generation tool**, it supports 8 distinct art styles, 6 background options, and batch generation — all wrapped in a sleek dark-themed UI.
 
 ### Built With
 
@@ -33,7 +33,7 @@ AvatarAI is a web app that generates beautiful AI avatars from text prompts or u
 | **Framework** | Next.js 16 (App Router) |
 | **Language** | TypeScript 5 |
 | **Styling** | Tailwind CSS 4 |
-| **AI** | OpenAI gpt-image-1 |
+| **AI** | OpenAI GPT-4.1 + Responses API (image_generation tool) |
 | **Deployment** | Vercel / any Node.js host |
 
 ---
@@ -156,6 +156,7 @@ src/
   "styleId": "realistic",
   "backgroundId": "office",
   "size": "1024x1024",
+  "quality": "high",
   "count": 2,
   "userImage": "data:image/png;base64,..."
 }

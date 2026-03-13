@@ -17,7 +17,7 @@ export default function Hero() {
       <div className="relative max-w-5xl mx-auto px-4 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-gray-300 mb-8 backdrop-blur-sm">
           <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          Powered by OpenAI gpt-image-1
+          Powered by OpenAI GPT-4.1 + Image Generation
         </div>
 
         <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight mb-6">

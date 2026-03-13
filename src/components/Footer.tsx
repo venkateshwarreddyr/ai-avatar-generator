@@ -16,7 +16,7 @@ export default function Footer() {
           </div>
 
           <p className="text-sm text-gray-600">
-            Built with Next.js, Tailwind CSS & OpenAI gpt-image-1
+            Built with Next.js, Tailwind CSS & OpenAI GPT-4.1
           </p>
 
           <div className="flex items-center gap-6">
