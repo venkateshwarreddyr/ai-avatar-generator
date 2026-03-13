@@ -16,7 +16,7 @@
 <br />
 <br />
 
-[**Live Demo**](#) &nbsp;&middot;&nbsp; [**Report Bug**](../../issues) &nbsp;&middot;&nbsp; [**Request Feature**](../../issues)
+[**Live Demo**](https://ai-avatar-generator-lilac.vercel.app) &nbsp;&middot;&nbsp; [**Report Bug**](../../issues) &nbsp;&middot;&nbsp; [**Request Feature**](../../issues)
 
 </div>
 
