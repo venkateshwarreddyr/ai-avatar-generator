@@ -1,9 +1,5 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 // Direct image model — no org verification needed.
 // Override via OPENAI_IMAGE_MODEL env var.
 // Supported: gpt-image-1 (default), gpt-image-1-mini (cheaper), gpt-image-1.5 (newest)
@@ -11,6 +7,14 @@ const IMAGE_MODEL = (process.env.OPENAI_IMAGE_MODEL || "gpt-image-1") as
   | "gpt-image-1"
   | "gpt-image-1-mini"
   | "gpt-image-1.5";
+
+function getOpenAIClient(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || apiKey === "your_openai_api_key_here") {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
+  return new OpenAI({ apiKey });
+}
 
 export interface GenerateAvatarParams {
   prompt: string;
@@ -36,6 +40,7 @@ export async function generateAvatar(params: GenerateAvatarParams): Promise<stri
   } = params;
 
   const fullPrompt = buildPrompt(prompt, stylePrompt, backgroundPrompt);
+  const openai = getOpenAIClient();
 
   const generateOne = async (): Promise<string> => {
     if (userImageBase64) {
