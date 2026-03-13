@@ -198,17 +198,6 @@ docker run -p 3000:3000 -e OPENAI_API_KEY=sk-... avatar-ai
 
 ---
 
-## Roadmap
-
-- [ ] AI talking avatars (video)
-- [ ] Avatar history & gallery
-- [ ] Custom style training
-- [ ] Avatar marketplace
-- [ ] Social media export (LinkedIn, Twitter sizes)
-- [ ] Batch processing via CSV
-
----
-
 ## Contributing
 
 Contributions are welcome! Fork the repo, create a feature branch, and open a PR.
