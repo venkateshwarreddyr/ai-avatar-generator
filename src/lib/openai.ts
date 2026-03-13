@@ -39,7 +39,6 @@ export async function generateAvatar(params: GenerateAvatarParams): Promise<stri
     userImageMediaType = "image/png",
   } = params;
 
-  const fullPrompt = buildPrompt(prompt, stylePrompt, backgroundPrompt);
   const openai = getOpenAIClient();
 
   const generateOne = async (): Promise<string> => {
@@ -49,10 +48,12 @@ export async function generateAvatar(params: GenerateAvatarParams): Promise<stri
       const ext = userImageMediaType.split("/")[1] || "png";
       const imageFile = new File([imageBuffer], `input.${ext}`, { type: userImageMediaType });
 
+      const editPrompt = buildPhotoEditPrompt(prompt, stylePrompt, backgroundPrompt);
+
       const result = await openai.images.edit({
         model: IMAGE_MODEL,
         image: imageFile,
-        prompt: `Transform this photo into a stylized avatar. ${fullPrompt}`,
+        prompt: editPrompt,
         size,
       });
 
@@ -61,7 +62,7 @@ export async function generateAvatar(params: GenerateAvatarParams): Promise<stri
       // Text-to-avatar: use images.generate
       const result = await openai.images.generate({
         model: IMAGE_MODEL,
-        prompt: `Draw ${fullPrompt}`,
+        prompt: buildTextPrompt(prompt, stylePrompt, backgroundPrompt),
         size,
         quality,
         n: 1,
@@ -79,14 +80,33 @@ export async function generateAvatar(params: GenerateAvatarParams): Promise<stri
   return results.filter(Boolean);
 }
 
-function buildPrompt(userPrompt: string, stylePrompt: string, backgroundPrompt?: string): string {
+/**
+ * Build prompt for photo-to-avatar (images.edit).
+ * Preserves the person's likeness while applying the user's requested transformation.
+ */
+function buildPhotoEditPrompt(userPrompt: string, stylePrompt: string, backgroundPrompt?: string): string {
   const parts = [
-    `a stunning avatar portrait: ${userPrompt}`,
-    `Art style: ${stylePrompt}`,
-    backgroundPrompt ? `Background: ${backgroundPrompt}` : null,
-    "The avatar should be centered, well-composed, high quality, and visually striking.",
-    "Single person portrait, facing slightly towards camera.",
+    "Preserve this person's exact face, facial features, bone structure, skin tone, hair, and full likeness",
+    "Do not change who the person is",
+    `Transform this person into: ${userPrompt}`,
+    `${stylePrompt}`,
+    backgroundPrompt ? `${backgroundPrompt}` : null,
+    "detailed face, cinematic lighting, high quality portrait, well-composed, centered framing",
   ];
 
-  return parts.filter(Boolean).join(". ");
+  return parts.filter(Boolean).join(", ");
+}
+
+/**
+ * Build prompt for text-to-avatar (images.generate).
+ * Converts simple user input into a detailed image generation prompt.
+ */
+function buildTextPrompt(userPrompt: string, stylePrompt: string, backgroundPrompt?: string): string {
+  const parts = [
+    `${stylePrompt} portrait avatar of ${userPrompt}`,
+    backgroundPrompt ? `${backgroundPrompt}` : null,
+    "detailed face, cinematic lighting, high quality portrait, well-composed, centered framing, visually striking",
+  ];
+
+  return parts.filter(Boolean).join(", ");
 }
