@@ -4,8 +4,13 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Use a mainline model with the image_generation tool (Responses API)
-const MODEL = "gpt-4.1";
+// Direct image model — no org verification needed.
+// Override via OPENAI_IMAGE_MODEL env var.
+// Supported: gpt-image-1 (default), gpt-image-1-mini (cheaper), gpt-image-1.5 (newest)
+const IMAGE_MODEL = (process.env.OPENAI_IMAGE_MODEL || "gpt-image-1") as
+  | "gpt-image-1"
+  | "gpt-image-1-mini"
+  | "gpt-image-1.5";
 
 export interface GenerateAvatarParams {
   prompt: string;
@@ -33,50 +38,32 @@ export async function generateAvatar(params: GenerateAvatarParams): Promise<stri
   const fullPrompt = buildPrompt(prompt, stylePrompt, backgroundPrompt);
 
   const generateOne = async (): Promise<string> => {
-    // Build input content
-    const content: OpenAI.Responses.ResponseInputContent[] = [];
-
-    // If user uploaded an image, include it as input for editing
     if (userImageBase64) {
-      content.push({
-        type: "input_image",
-        image_url: `data:${userImageMediaType};base64,${userImageBase64}`,
-        detail: "high",
+      // Photo-to-avatar: use images.edit with the uploaded image
+      const imageBuffer = Buffer.from(userImageBase64, "base64");
+      const ext = userImageMediaType.split("/")[1] || "png";
+      const imageFile = new File([imageBuffer], `input.${ext}`, { type: userImageMediaType });
+
+      const result = await openai.images.edit({
+        model: IMAGE_MODEL,
+        image: imageFile,
+        prompt: `Transform this photo into a stylized avatar. ${fullPrompt}`,
+        size,
       });
-      content.push({
-        type: "input_text",
-        text: `Transform this photo into a stylized avatar. ${fullPrompt}`,
-      });
+
+      return result.data?.[0]?.b64_json ?? "";
     } else {
-      content.push({
-        type: "input_text",
-        text: `Draw ${fullPrompt}`,
+      // Text-to-avatar: use images.generate
+      const result = await openai.images.generate({
+        model: IMAGE_MODEL,
+        prompt: `Draw ${fullPrompt}`,
+        size,
+        quality,
+        n: 1,
       });
+
+      return result.data?.[0]?.b64_json ?? "";
     }
-
-    const response = await openai.responses.create({
-      model: MODEL,
-      input: [{ role: "user", content }],
-      tools: [
-        {
-          type: "image_generation",
-          size,
-          quality,
-        },
-      ],
-      tool_choice: { type: "image_generation" },
-    });
-
-    // Extract the generated image from the response
-    const imageOutput = response.output.find(
-      (output) => output.type === "image_generation_call"
-    );
-
-    if (imageOutput && imageOutput.type === "image_generation_call" && imageOutput.result) {
-      return imageOutput.result;
-    }
-
-    return "";
   };
 
   // Generate images concurrently (max 4)
